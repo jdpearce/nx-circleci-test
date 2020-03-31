@@ -16,13 +16,29 @@
     },
     "todos-e2e": {
       "tags": [],
-      "implicitDependencies": ["todos"]
+      "implicitDependencies": [
+        "todos"
+      ]
     },
     "api": {
       "tags": []
     },
     "api-interfaces": {
       "tags": []
+    }
+  },
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "@nrwl/nx-cloud",
+      "options": {
+        "accessToken": "ZDU5ZTdjOTItMWQ3Mi00NWI2LWI4YWMtYjFmZDE4YjMyOGQzfHJlYWQ=",
+        "cacheableOperations": [
+          "build",
+          "test",
+          "lint",
+          "e2e"
+        ]
+      }
     }
   }
 }
