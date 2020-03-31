@@ -10,7 +10,8 @@ jobs:
       - node/with-cache:
           steps:
             - run: yarn
-            - run: yarn nx test
+            - run: yarn nx run-many --target=test --all
+            - run: yarn nx run-many --target=build --all
 workflows:
   build-and-test:
     jobs:
