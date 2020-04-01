@@ -1,18 +1,73 @@
 version: 2.1
+
 orbs:
-  node: circleci/node@1.1.6
+  node: circleci/node@2.0.1
+
+# Reusable Commands
+commands:
+  yarn_install:
+    description: 'Install & Cache Dependencies'
+    steps:
+      - run: yarn install --frozen-lockfile --non-interactive
+      - save_cache:
+          key: nx-circleci-test-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache
+            - node_modules
+
+  restore_yarn_cache:
+    description: 'Restore Cached Dependencies'
+    steps:
+      - restore_cache:
+          keys:
+            - nx-circleci-test-{{ checksum "yarn.lock" }}
+            - nx-circleci-test- # used if checksum fails
+
+  setup:
+    description: 'Setup Executor'
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ./
+
+# Available Jobs
 jobs:
-  build-and-test:
+  initialise:
     executor:
       name: node/default
     steps:
       - checkout
-      - node/with-cache:
-          steps:
-            - run: yarn
-            - run: yarn nx run-many --target=test --all
-            - run: yarn nx run-many --target=build --all
+      - restore_yarn_cache
+      - yarn_install
+      - persist_to_workspace:
+          root: ./
+          paths: ./
+
+  build:
+    executor:
+      name: node/default
+    steps:
+      - setup
+      - run:
+          name: Build all the projects
+          command: yarn nx run-many --target=build --all
+
+  test:
+    executor:
+      name: node/default
+    steps:
+      - setup
+      - run:
+          name: Run all the tests
+          command: yarn nx run-many --target=test --all
+
 workflows:
   build-and-test:
     jobs:
-      - build-and-test
+      - initialise
+      - build:
+          requires:
+            - initialise
+      - test:
+          requires:
+            - initialise
