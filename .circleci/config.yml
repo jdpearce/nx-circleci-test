@@ -5,30 +5,30 @@ orbs:
 
 # Reusable Commands
 commands:
-  yarn_install:
+  npm_install:
     description: 'Install & Cache Dependencies'
     steps:
-      - run: yarn install --frozen-lockfile --non-interactive
+      - run: npm install
       - save_cache:
-          key: nx-circleci-test-{{ checksum "yarn.lock" }}
+          key: nx-cloud-recipe-{{ checksum "package-lock.json" }}
           paths:
             - ~/.cache
             - node_modules
 
-  restore_yarn_cache:
+  restore_npm_cache:
     description: 'Restore Cached Dependencies'
     steps:
       - restore_cache:
           keys:
-            - nx-circleci-test-{{ checksum "yarn.lock" }}
-            - nx-circleci-test- # used if checksum fails
+            - nx-cloud-recipe-{{ checksum "package-lock.json" }}
+            - nx-cloud-recipe- # used if checksum fails
 
   setup:
     description: 'Setup Executor'
     steps:
       - checkout
       - attach_workspace:
-          at: ./
+          at: ~/project
 
 # Available Jobs
 jobs:
@@ -37,11 +37,13 @@ jobs:
       name: node/default
     steps:
       - checkout
-      - restore_yarn_cache
-      - yarn_install
+      - restore_npm_cache
+      - npm_install
       - persist_to_workspace:
-          root: ./
-          paths: ./
+          root: ~/project
+          paths:
+            - node_modules
+            - dist
 
   build:
     executor:
@@ -50,7 +52,7 @@ jobs:
       - setup
       - run:
           name: Build all the projects
-          command: yarn nx run-many --target=build --all
+          command: npx nx affected:build --base=master~1 --head=master
 
   test:
     executor:
@@ -59,7 +61,7 @@ jobs:
       - setup
       - run:
           name: Run all the tests
-          command: yarn nx run-many --target=test --all
+          command: npx nx affected:test --base=master~1 --head=master
 
 workflows:
   build-and-test:
